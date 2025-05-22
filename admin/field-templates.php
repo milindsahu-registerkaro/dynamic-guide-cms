@@ -249,35 +249,62 @@ class Guide_CMS_Field_Templates_Admin {
                 
                 // Load field options if any
                 var field = <?php echo json_encode($fields); ?>.find(f => f.id == id);
-                if (field && field.field_options) {
-                    var options = JSON.parse(field.field_options);
-                    
+                if (field) {
                     // Clear existing options
                     $('#select-options-list, #repeater-fields-list').empty();
                     
-                    if (field.field_type === 'select' && options.options) {
-                        options.options.forEach(function(opt) {
-                            var optionHtml = '<div class="select-option">' +
-                                '<input type="text" name="field_options[options][][label]" value="' + opt.label + '" required>' +
-                                '<input type="text" name="field_options[options][][value]" value="' + opt.value + '" required>' +
+                    try {
+                        var options = field.field_options ? JSON.parse(field.field_options) : {};
+                        
+                        if (field.field_type === 'select' && options.options) {
+                            options.options.forEach(function(opt) {
+                                var optionHtml = '<div class="select-option">' +
+                                    '<input type="text" name="field_options[options][][label]" value="' + (opt.label || '') + '" required>' +
+                                    '<input type="text" name="field_options[options][][value]" value="' + (opt.value || '') + '" required>' +
+                                    '<button type="button" class="button remove-option">Remove</button>' +
+                                    '</div>';
+                                $('#select-options-list').append(optionHtml);
+                            });
+                        } else if (field.field_type === 'repeater' && options.sub_fields) {
+                            options.sub_fields.forEach(function(sub) {
+                                var fieldHtml = '<div class="repeater-field">' +
+                                    '<input type="text" name="field_options[sub_fields][][key]" value="' + (sub.key || '') + '" required>' +
+                                    '<input type="text" name="field_options[sub_fields][][label]" value="' + (sub.label || '') + '" required>' +
+                                    '<select name="field_options[sub_fields][][type]">' +
+                                    '<option value="text"' + (sub.type === 'text' ? ' selected' : '') + '>Text</option>' +
+                                    '<option value="textarea"' + (sub.type === 'textarea' ? ' selected' : '') + '>Textarea</option>' +
+                                    '<option value="wysiwyg"' + (sub.type === 'wysiwyg' ? ' selected' : '') + '>WYSIWYG</option>' +
+                                    '</select>' +
+                                    '<button type="button" class="button remove-field">Remove</button>' +
+                                    '</div>';
+                                $('#repeater-fields-list').append(fieldHtml);
+                            });
+                        }
+                    } catch (e) {
+                        console.error('Error parsing field options:', e);
+                        // If there's an error parsing JSON, initialize with empty options
+                        if (field.field_type === 'select') {
+                            $('#select-options-list').append(
+                                '<div class="select-option">' +
+                                '<input type="text" name="field_options[options][][label]" placeholder="Label" required>' +
+                                '<input type="text" name="field_options[options][][value]" placeholder="Value" required>' +
                                 '<button type="button" class="button remove-option">Remove</button>' +
-                                '</div>';
-                            $('#select-options-list').append(optionHtml);
-                        });
-                    } else if (field.field_type === 'repeater' && options.sub_fields) {
-                        options.sub_fields.forEach(function(sub) {
-                            var fieldHtml = '<div class="repeater-field">' +
-                                '<input type="text" name="field_options[sub_fields][][key]" value="' + sub.key + '" required>' +
-                                '<input type="text" name="field_options[sub_fields][][label]" value="' + sub.label + '" required>' +
+                                '</div>'
+                            );
+                        } else if (field.field_type === 'repeater') {
+                            $('#repeater-fields-list').append(
+                                '<div class="repeater-field">' +
+                                '<input type="text" name="field_options[sub_fields][][key]" placeholder="Key" required>' +
+                                '<input type="text" name="field_options[sub_fields][][label]" placeholder="Label" required>' +
                                 '<select name="field_options[sub_fields][][type]">' +
-                                '<option value="text"' + (sub.type === 'text' ? ' selected' : '') + '>Text</option>' +
-                                '<option value="textarea"' + (sub.type === 'textarea' ? ' selected' : '') + '>Textarea</option>' +
-                                '<option value="wysiwyg"' + (sub.type === 'wysiwyg' ? ' selected' : '') + '>WYSIWYG</option>' +
+                                '<option value="text">Text</option>' +
+                                '<option value="textarea">Textarea</option>' +
+                                '<option value="wysiwyg">WYSIWYG</option>' +
                                 '</select>' +
                                 '<button type="button" class="button remove-field">Remove</button>' +
-                                '</div>';
-                            $('#repeater-fields-list').append(fieldHtml);
-                        });
+                                '</div>'
+                            );
+                        }
                     }
                 }
                 

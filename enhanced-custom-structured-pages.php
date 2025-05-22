@@ -379,11 +379,15 @@ class Guide_CMS_Plugin {
     }
 
     public function add_templates_submenus() {
+        require_once GUIDE_CMS_PLUGIN_DIR . 'includes/field-template-manager.php';
+        $manager = new Guide_CMS_Field_Template_Manager();
+
         $types = [
             'guide_page' => 'Guide Pages',
             'service_page' => 'Service Pages',
             'local_page' => 'Local Pages',
         ];
+
         foreach ($types as $type => $label) {
             // Templates submenu
             add_submenu_page(
@@ -392,21 +396,74 @@ class Guide_CMS_Plugin {
                 'Templates',
                 'manage_options',
                 $type . '-template',
-                function() use ($type, $label) {
-                    $fields = guide_cms_get_field_templates()[$type] ?? [];
+                function() use ($type, $label, $manager) {
+                    $fields = $manager->get_fields($type);
                     echo '<div class="wrap"><h1>' . esc_html($label) . ' Template</h1>';
+                    
                     if ($fields) {
-                        echo '<table class="widefat"><thead><tr><th>Key</th><th>Label</th><th>Type</th></tr></thead><tbody>';
+                        echo '<table class="widefat"><thead><tr>';
+                        echo '<th>Order</th>';
+                        echo '<th>Key</th>';
+                        echo '<th>Label</th>';
+                        echo '<th>Type</th>';
+                        echo '<th>Options</th>';
+                        echo '</tr></thead><tbody>';
+                        
                         foreach ($fields as $field) {
-                            echo '<tr><td>' . esc_html($field['key']) . '</td><td>' . esc_html($field['label']) . '</td><td>' . esc_html($field['type']) . '</td></tr>';
+                            echo '<tr>';
+                            echo '<td>' . intval($field->field_order) . '</td>';
+                            echo '<td><code>' . esc_html($field->field_key) . '</code></td>';
+                            echo '<td>' . esc_html($field->field_label) . '</td>';
+                            echo '<td>' . esc_html($field->field_type) . '</td>';
+                            echo '<td>';
+                            
+                            if ($field->field_options) {
+                                $options = json_decode($field->field_options, true);
+                                
+                                if ($field->field_type === 'select' && isset($options['options'])) {
+                                    echo '<strong>Options:</strong><br>';
+                                    foreach ($options['options'] as $option) {
+                                        echo '<code>' . esc_html($option['value']) . '</code> → ' . esc_html($option['label']) . '<br>';
+                                    }
+                                } elseif ($field->field_type === 'repeater' && isset($options['sub_fields'])) {
+                                    echo '<strong>Sub-fields:</strong><br>';
+                                    foreach ($options['sub_fields'] as $sub) {
+                                        echo '<code>' . esc_html($sub['key']) . '</code> (' . esc_html($sub['type']) . ') → ' . esc_html($sub['label']) . '<br>';
+                                    }
+                                }
+                            }
+                            
+                            echo '</td>';
+                            echo '</tr>';
                         }
+                        
                         echo '</tbody></table>';
+                        
+                        // Add usage instructions
+                        echo '<div class="card" style="max-width:800px;margin-top:20px;">';
+                        echo '<h2>Using These Fields</h2>';
+                        echo '<p>These fields will appear in the editor when creating or editing a ' . esc_html($label) . '. You can manage these fields in the <a href="' . esc_url(admin_url('admin.php?page=guide-cms-field-templates&post_type=' . $type)) . '">Field Templates</a> section.</p>';
+                        echo '<h3>REST API Usage</h3>';
+                        echo '<p>These fields are available in the REST API. Example:</p>';
+                        echo '<pre>GET /wp-json/wp/v2/' . esc_html($type) . '</pre>';
+                        echo '<p>To update a field value via REST API:</p>';
+                        echo '<pre>POST /wp-json/wp/v2/' . esc_html($type) . '/{id}
+{
+    "meta": {
+        "field_key": "value"
+    }
+}</pre>';
+                        echo '</div>';
                     } else {
-                        echo '<p>No template fields defined for this type.</p>';
+                        echo '<div class="notice notice-warning">';
+                        echo '<p>No template fields defined for this type. <a href="' . esc_url(admin_url('admin.php?page=guide-cms-field-templates&post_type=' . $type)) . '">Add some fields</a>.</p>';
+                        echo '</div>';
                     }
+                    
                     echo '</div>';
                 }
             );
+
             // REST API Docs submenu
             add_submenu_page(
                 'edit.php?post_type=' . $type,
