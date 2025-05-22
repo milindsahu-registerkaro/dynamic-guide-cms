@@ -82,6 +82,9 @@ class Guide_CMS_Plugin {
         add_action('init', [$this, 'register_rest_meta']);
         // Add Templates submenu under each post type
         add_action('admin_menu', [$this, 'add_templates_submenus']);
+
+        // Prevent auto-save when selecting media
+        add_filter('wp_doing_ajax', [$this, 'prevent_auto_save_on_media_select'], 10, 1);
     }
 
     public function activate() {
@@ -288,6 +291,54 @@ class Guide_CMS_Plugin {
                 $post_type . '_fields',
                 ucfirst(str_replace('_', ' ', $post_type)) . ' Fields',
                 function($post) use ($fields) {
+                    // Add JavaScript for media handling
+                    ?>
+                    <script type="text/javascript">
+                    jQuery(document).ready(function($) {
+                        // Store the original form submit handler
+                        var originalSubmit = $('form#post').prop('onsubmit');
+                        
+                        // Override the form submit
+                        $('form#post').prop('onsubmit', function(e) {
+                            // If we're in the media frame, don't submit
+                            if ($('body').hasClass('media-frame')) {
+                                return false;
+                            }
+                            // Otherwise, use the original handler
+                            return originalSubmit ? originalSubmit.call(this, e) : true;
+                        });
+
+                        // Handle image selection
+                        $('.select-image').on('click', function(e) {
+                            e.preventDefault();
+                            var button = $(this);
+                            var target = button.data('target');
+                            
+                            // Create the media frame
+                            var frame = wp.media({
+                                title: 'Select Image',
+                                multiple: false
+                            });
+
+                            // When an image is selected
+                            frame.on('select', function() {
+                                var attachment = frame.state().get('selection').first().toJSON();
+                                $('input[name="' + target + '"]').val(attachment.id);
+                                
+                                // Update preview
+                                var preview = button.siblings('img');
+                                if (preview.length) {
+                                    preview.attr('src', attachment.url);
+                                } else {
+                                    button.after('<br><img src="' + attachment.url + '" style="max-width:200px;margin-top:5px;">');
+                                }
+                            });
+
+                            frame.open();
+                        });
+                    });
+                    </script>
+                    <?php
                     foreach ($fields as $field) {
                         $value = get_post_meta($post->ID, $field->field_key, true);
                         echo '<p><label><strong>' . esc_html($field->field_label) . '</strong></label><br>';
@@ -319,8 +370,15 @@ class Guide_CMS_Plugin {
                                 echo '<input type="checkbox" name="' . esc_attr($field->field_key) . '" value="1"' . checked($value, '1', false) . '> Yes';
                                 break;
                             case 'image':
-                                echo '<input type="text" name="' . esc_attr($field->field_key) . '" value="' . esc_attr($value) . '" style="width:80%;"> <button class="button select-image" data-target="' . esc_attr($field->field_key) . '">Select Image</button>';
-                                if ($value) echo '<br><img src="' . esc_url($value) . '" style="max-width:200px;margin-top:5px;">';
+                                $image_url = '';
+                                if ($value) {
+                                    $image_url = wp_get_attachment_image_url($value, 'thumbnail');
+                                }
+                                echo '<input type="hidden" name="' . esc_attr($field->field_key) . '" value="' . esc_attr($value) . '">';
+                                echo '<button class="button select-image" data-target="' . esc_attr($field->field_key) . '">Select Image</button>';
+                                if ($image_url) {
+                                    echo '<br><img src="' . esc_url($image_url) . '" style="max-width:200px;margin-top:5px;">';
+                                }
                                 break;
                             case 'repeater':
                                 $repeater = is_array($value) ? $value : [];
@@ -631,6 +689,13 @@ class Guide_CMS_Plugin {
                 }
             );
         }
+    }
+
+    public function prevent_auto_save_on_media_select($doing_ajax) {
+        if (isset($_POST['action']) && $_POST['action'] === 'query-attachments') {
+            remove_action('save_post', [$this, 'save_dynamic_fields']);
+        }
+        return $doing_ajax;
     }
 }
 
