@@ -1,0 +1,607 @@
+/**
+ * Custom CMS Admin Styles
+ */
+
+/* General container styling */
+.custom-cms-container {
+  margin-top: 20px;
+  overflow-x: auto;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Status indicators */
+.status-published {
+  background-color: #46b450;
+  color: white;
+  padding: 3px 8px;
+  border-radius: 3px;
+  font-size: 12px;
+  display: inline-block;
+}
+
+.status-draft {
+  background-color: #ffb900;
+  color: white;
+  padding: 3px 8px;
+  border-radius: 3px;
+  font-size: 12px;
+  display: inline-block;
+}
+
+/* Section, FAQ, Video and Breadcrumb styling */
+.section-item,
+.faq-item,
+.video-item,
+.breadcrumb-item {
+  background-color: #fff;
+  border: 1px solid #e2e4e7;
+  padding: 15px;
+  margin-bottom: 15px;
+  position: relative;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.section-header,
+.faq-header,
+.video-header,
+.breadcrumb-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+
+.section-header h3,
+.faq-header h3,
+.video-header h3,
+.breadcrumb-header h3 {
+  margin: 0;
+}
+
+.section-actions,
+.faq-actions,
+.video-actions,
+.breadcrumb-actions {
+  display: flex;
+  gap: 5px;
+}
+
+/* Form styling */
+.form-table {
+  border-collapse: collapse;
+  margin-top: 0.5em;
+  width: 100%;
+  clear: both;
+  table-layout: fixed;
+}
+
+.form-table th {
+  width: 120px !important; /* or even 100px */
+  min-width: 1100px;
+  padding-right: 10px;
+}
+
+/* Increase the width of the right sidebar/metabox container */
+#poststuff {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+}
+
+#post-body.columns-2 {
+  width: 100%;
+  display: flex;
+  gap: 24px;
+}
+
+#postbox-container-1 {
+  width: 60%; /* Main content area */
+  min-width: 430px;
+}
+
+#postbox-container-2 {
+  width: 40%; /* Sidebar/metaboxes */
+  /* min-width: 1320px; */
+}
+
+/* On smaller screens, stack columns */
+@media (max-width: 1100px) {
+  #post-body.columns-2 {
+    flex-direction: column;
+  }
+  #postbox-container-1,
+  #postbox-container-2 {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+.form-table td {
+  margin-bottom: 9px;
+  padding: 15px 10px;
+  line-height: 1.3;
+  vertical-align: middle;
+  word-wrap: break-word;
+}
+
+/* Image previews */
+.image-preview-wrapper {
+  margin-bottom: 10px;
+  max-width: 300px;
+}
+
+.image-preview-wrapper img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Move buttons */
+.move-up,
+.move-down {
+  padding: 0 8px;
+  min-height: 30px;
+}
+
+/* Text areas */
+.section-content,
+.faq-answer,
+.video-text,
+.video-embed {
+  width: 100%;
+  min-height: 100px;
+}
+
+/* Editor fields */
+.wp-editor-wrap {
+  margin-bottom: 10px;
+  width: 100%;
+}
+
+.wp-editor-container {
+  border: 1px solid #ddd;
+}
+
+/* Preview button */
+#preview-page {
+  margin-right: 5px;
+}
+
+/* Alert messages */
+.csp-notice {
+  background: #fff;
+  border-left: 4px solid #fff;
+  box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.1);
+  margin: 5px 0 15px;
+  padding: 1px 12px;
+}
+
+.csp-notice-success {
+  border-left-color: #46b450;
+}
+
+.csp-notice-error {
+  border-left-color: #dc3232;
+}
+
+.csp-notice-warning {
+  border-left-color: #ffb900;
+}
+
+.csp-notice-info {
+  border-left-color: #00a0d2;
+}
+
+/* Delete button */
+.submitdelete {
+  color: #a00;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.submitdelete:hover {
+  color: #dc3232;
+}
+
+/* Modal styling - Complete overhaul for better reliability */
+.csp-modal {
+  display: none;
+  position: fixed;
+  z-index: 100050; /* Higher than WP admin bar */
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.6);
+}
+
+.csp-modal-content {
+  background-color: #f1f1f1;
+  margin: 10% auto;
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  width: 50%;
+  max-width: 600px;
+  position: relative;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  animation: modalAppear 0.3s ease-out;
+}
+
+@keyframes modalAppear {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.csp-close {
+  color: #aaa;
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.csp-close:hover,
+.csp-close:focus {
+  color: #333;
+  text-decoration: none;
+}
+
+/* Improved responsive behavior */
+@media screen and (max-width: 782px) {
+  .form-table th,
+  .form-table td {
+    display: block;
+    width: 100%;
+    padding: 10px 0;
+  }
+
+  .form-table input[type="text"],
+  .form-table select,
+  .form-table textarea {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* Fix WordPress admin columns display on mobile */
+  .wp-list-table tr:not(.inline-edit-row):not(.no-items) td:not(.check-column) {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 8px 10px;
+  }
+
+  .wp-list-table .column-primary {
+    width: 100%;
+  }
+
+  /* Better component styling on small screens */
+  .section-item,
+  .faq-item,
+  .video-item,
+  .breadcrumb-item {
+    padding: 10px;
+    margin-bottom: 10px;
+  }
+
+  .section-header,
+  .faq-header,
+  .video-header,
+  .breadcrumb-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .section-actions,
+  .faq-actions,
+  .video-actions,
+  .breadcrumb-actions {
+    margin-top: 10px;
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+
+  /* WordPress editor improvements for mobile */
+  .wp-editor-wrap {
+    overflow-x: auto;
+    max-width: 100%;
+  }
+
+  .wp-media-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+
+  /* Fix for editor on small screens */
+  .mce-container,
+  .mce-container-body {
+    width: 100% !important;
+  }
+
+  /* Fix toolbar wrapping */
+  .mce-toolbar-grp {
+    padding: 0 !important;
+  }
+
+  .mce-toolbar .mce-btn-group .mce-btn {
+    margin: 2px;
+  }
+}
+
+/* Enhanced modal responsiveness */
+@media screen and (max-width: 600px) {
+  .csp-modal-content {
+    width: 90%;
+    margin: 30% auto 10%;
+    padding: 15px;
+  }
+
+  .csp-close {
+    top: 5px;
+    right: 10px;
+    font-size: 24px;
+  }
+
+  /* Form buttons in mobile view */
+  p.submit {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  p.submit .button {
+    width: 100%;
+    margin: 0;
+    text-align: center;
+  }
+}
+
+/* Fix for WordPress admin menus */
+@media screen and (max-width: 960px) {
+  .auto-fold #wpcontent {
+    padding-left: 0;
+  }
+}
+
+/* Ensure action buttons look tappable on mobile */
+@media (hover: none) {
+  .edit-category,
+  .delete-category,
+  .page-title-action,
+  .button {
+    padding: 8px 12px !important;
+    margin: 5px 0 !important;
+    display: inline-block;
+    min-height: 44px; /* Better touch target */
+  }
+}
+
+/**
+ * Add these styles to admin.css for the conclusion section
+ */
+
+/* Conclusion section styling */
+.csp-conclusion-section {
+  background-color: #f9f9f9;
+  border: 1px solid #e2e4e7;
+  border-radius: 3px;
+  padding: 20px;
+  margin: 30px 0;
+}
+
+.csp-conclusion-content {
+  margin-top: 15px;
+}
+
+/* Add a special border color for the conclusion section to make it stand out */
+#conclusion-heading:focus {
+  border-color: #0073aa;
+  box-shadow: 0 0 2px rgba(0, 115, 170, 0.8);
+}
+
+/* Style the conclusion section in the front-end template */
+.csp-conclusion-section h2 {
+  margin-top: 0;
+  color: #23282d;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+
+.csp-conclusion-content p:last-child {
+  margin-bottom: 0;
+}
+
+/* Add responsive styles for the conclusion section */
+@media screen and (max-width: 782px) {
+  .csp-conclusion-section {
+    padding: 15px;
+    margin: 20px 0;
+  }
+}
+
+/* Author section styling */
+.csp-author-section {
+  margin: 40px 0;
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 5px;
+  border: 1px solid #e0e0e0;
+}
+
+.csp-author-section h2 {
+  margin-top: 0;
+  font-size: 1.5em;
+  border-bottom: 1px solid #e0e0e0;
+  padding-bottom: 10px;
+  margin-bottom: 20px;
+}
+
+.csp-author-container {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.csp-author-image {
+  flex: 0 0 100px;
+}
+
+.csp-author-image img {
+  border-radius: 50%;
+  max-width: 100px;
+  height: auto;
+}
+
+.csp-author-details {
+  flex: 1;
+  min-width: 250px;
+}
+
+.csp-author-name {
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 1.2em;
+}
+
+.csp-author-bio {
+  font-size: 0.95em;
+  line-height: 1.5;
+}
+
+/* Responsive improvements for front-end */
+@media screen and (max-width: 768px) {
+  .csp-page-container {
+    padding: 15px;
+  }
+
+  .csp-author-container {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .csp-author-image {
+    margin-bottom: 15px;
+  }
+
+  .csp-breadcrumbs ul {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .csp-breadcrumbs li:not(:last-child)::after {
+    display: none;
+  }
+}
+
+/* Front-end template improvements */
+.csp-page-container {
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.csp-page-header {
+  margin-bottom: 30px;
+}
+
+.csp-hero-image {
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.csp-hero-image img {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+}
+
+.csp-breadcrumbs {
+  margin: 15px 0;
+}
+
+.csp-breadcrumbs ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.csp-breadcrumbs li {
+  display: flex;
+  align-items: center;
+}
+
+.csp-breadcrumbs li:not(:last-child)::after {
+  content: "/";
+  margin: 0 5px;
+  color: #666;
+}
+
+/* FAQ section improvements */
+.csp-faq-section {
+  margin: 30px 0;
+}
+
+.csp-faq-item {
+  margin-bottom: 20px;
+  border: 1px solid #e2e4e7;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.csp-faq-question {
+  padding: 15px;
+  background: #f9f9f9;
+  cursor: pointer;
+}
+
+.csp-faq-answer {
+  padding: 15px;
+  border-top: 1px solid #e2e4e7;
+}
+
+/* Responsive fix for admin form fields and columns */
+.form-table input[type="text"],
+.form-table input[type="email"],
+.form-table input[type="url"],
+.form-table input[type="number"],
+.form-table input[type="password"],
+.form-table select,
+.form-table textarea {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
+  resize: vertical;
+}
+
+#postbox-container-2,
+#postbox-container-1,
+.metabox-holder .postbox {
+  max-width: 100%;
+  overflow-x: auto;
+  box-sizing: border-box;
+}

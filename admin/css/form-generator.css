@@ -1,0 +1,144 @@
+.guide-cms-form {
+    max-width: 100%;
+    margin: 20px 0;
+}
+
+.guide-cms-field {
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.guide-cms-field label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+.guide-cms-field .required {
+    color: #dc3232;
+}
+
+.guide-cms-field .description {
+    margin-top: 5px;
+    color: #666;
+    font-style: italic;
+}
+
+/* Image Field */
+.image-preview-wrapper {
+    margin-bottom: 10px;
+}
+
+.image-preview-wrapper img {
+    max-width: 300px;
+    height: auto;
+    border: 1px solid #ddd;
+    padding: 5px;
+    background: #f9f9f9;
+}
+
+/* Repeater Field */
+.repeater-wrapper {
+    margin-bottom: 20px;
+}
+
+.repeater-item {
+    margin-bottom: 15px;
+    padding: 15px;
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.repeater-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #ddd;
+}
+
+.repeater-item-title {
+    font-weight: 600;
+}
+
+.repeater-items {
+    margin-bottom: 15px;
+}
+
+.repeater-items .repeater-item {
+    margin-bottom: 10px;
+}
+
+.repeater-items .repeater-item:last-child {
+    margin-bottom: 0;
+}
+
+/* Group Field */
+.group-wrapper {
+    padding: 15px;
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+/* Form Elements */
+.guide-cms-field input[type="text"],
+.guide-cms-field input[type="email"],
+.guide-cms-field input[type="url"],
+.guide-cms-field input[type="number"],
+.guide-cms-field select,
+.guide-cms-field textarea {
+    width: 100%;
+    max-width: 100%;
+}
+
+.guide-cms-field input[type="checkbox"],
+.guide-cms-field input[type="radio"] {
+    margin-right: 5px;
+}
+
+.guide-cms-field .wp-editor-wrap {
+    margin-top: 10px;
+}
+
+/* Buttons */
+.guide-cms-field .button {
+    margin-right: 10px;
+}
+
+.guide-cms-field .button:last-child {
+    margin-right: 0;
+}
+
+/* Sortable */
+.repeater-items.ui-sortable-helper {
+    background: #fff;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.repeater-items .ui-sortable-placeholder {
+    visibility: visible !important;
+    background: #f1f1f1;
+    border: 2px dashed #ddd;
+}
+
+/* Responsive */
+@media screen and (max-width: 782px) {
+    .guide-cms-field {
+        padding: 10px;
+    }
+    
+    .repeater-item-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .repeater-item-header .button {
+        margin-top: 10px;
+    }
+} 
