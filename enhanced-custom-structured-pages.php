@@ -40,6 +40,8 @@ if (is_admin()) {
     require_once GUIDE_CMS_PLUGIN_DIR . 'admin/field-templates.php';
 }
 
+require_once GUIDE_CMS_PLUGIN_DIR . 'includes/class-guide-cms-rest-controller.php';
+
 class Guide_CMS_Plugin {
     private $template_manager;
     private $page_manager;
@@ -113,7 +115,60 @@ class Guide_CMS_Plugin {
     }
 
     public function register_rest_routes() {
-        // Routes are registered in the API handler
+        // Register custom routes for id_or_slug for all post types
+        $post_types = ['guide_page', 'service_page', 'local_page'];
+        foreach ($post_types as $type) {
+            $controller = new Guide_CMS_REST_Controller($type);
+            
+            // Collection route
+            register_rest_route(
+                'guide-cms/v1',
+                '/' . $type,
+                [
+                    [
+                        'methods' => WP_REST_Server::READABLE,
+                        'callback' => [$controller, 'get_items'],
+                        'permission_callback' => [$controller, 'get_items_permissions_check'],
+                    ]
+                ]
+            );
+
+            // Single item by id or slug
+            register_rest_route(
+                'guide-cms/v1',
+                '/' . $type . '/(?P<id_or_slug>[\\w\-]+)',
+                [
+                    [
+                        'methods' => WP_REST_Server::READABLE,
+                        'callback' => [$controller, 'get_item_by_id_or_slug'],
+                        'permission_callback' => [$controller, 'get_item_permissions_check'],
+                        'args' => [
+                            'id_or_slug' => [
+                                'required' => true,
+                                'type' => 'string',
+                            ],
+                        ],
+                    ]
+                ]
+            );
+        }
+
+        // Add debug route
+        register_rest_route(
+            'guide-cms/v1',
+            '/debug',
+            [
+                'methods' => WP_REST_Server::READABLE,
+                'callback' => function($request) {
+                    return [
+                        'post_types' => get_post_types(['public' => true], 'names'),
+                        'rewrite_rules' => get_option('rewrite_rules'),
+                        'rest_routes' => rest_get_server()->get_routes()
+                    ];
+                },
+                'permission_callback' => '__return_true'
+            ]
+        );
     }
 
     public function template_loader($template) {
@@ -153,7 +208,7 @@ class Guide_CMS_Plugin {
             'supports' => ['title', 'editor', 'thumbnail', 'excerpt', 'author'],
             'show_in_rest' => true,
             'rest_base' => 'guide_page',
-            'rest_controller_class' => 'WP_REST_Posts_Controller',
+            'rest_controller_class' => 'Guide_CMS_REST_Controller',
         ]);
         // Service Pages
         register_post_type('service_page', [
@@ -175,7 +230,7 @@ class Guide_CMS_Plugin {
             'supports' => ['title', 'editor', 'thumbnail', 'excerpt', 'author'],
             'show_in_rest' => true,
             'rest_base' => 'service_page',
-            'rest_controller_class' => 'WP_REST_Posts_Controller',
+            'rest_controller_class' => 'Guide_CMS_REST_Controller',
         ]);
         // Local Pages
         register_post_type('local_page', [
@@ -197,7 +252,7 @@ class Guide_CMS_Plugin {
             'supports' => ['title', 'editor', 'thumbnail', 'excerpt', 'author'],
             'show_in_rest' => true,
             'rest_base' => 'local_page',
-            'rest_controller_class' => 'WP_REST_Posts_Controller',
+            'rest_controller_class' => 'Guide_CMS_REST_Controller',
         ]);
     }
 
@@ -208,6 +263,9 @@ class Guide_CMS_Plugin {
                 'label' => 'Categories',
                 'hierarchical' => true,
                 'show_admin_column' => true,
+                'show_in_rest' => true,
+                'rest_base' => "{$pt}_category",
+                'rest_controller_class' => 'WP_REST_Terms_Controller',
                 'rewrite' => ['slug' => "{$pt}-category"],
             ]);
         }
@@ -443,16 +501,6 @@ class Guide_CMS_Plugin {
                         echo '<div class="card" style="max-width:800px;margin-top:20px;">';
                         echo '<h2>Using These Fields</h2>';
                         echo '<p>These fields will appear in the editor when creating or editing a ' . esc_html($label) . '. You can manage these fields in the <a href="' . esc_url(admin_url('admin.php?page=guide-cms-field-templates&post_type=' . $type)) . '">Field Templates</a> section.</p>';
-                        echo '<h3>REST API Usage</h3>';
-                        echo '<p>These fields are available in the REST API. Example:</p>';
-                        echo '<pre>GET /wp-json/wp/v2/' . esc_html($type) . '</pre>';
-                        echo '<p>To update a field value via REST API:</p>';
-                        echo '<pre>POST /wp-json/wp/v2/' . esc_html($type) . '/{id}
-{
-    "meta": {
-        "field_key": "value"
-    }
-}</pre>';
                         echo '</div>';
                     } else {
                         echo '<div class="notice notice-warning">';
@@ -473,46 +521,112 @@ class Guide_CMS_Plugin {
                 $type . '-api-docs',
                 function() use ($type, $label) {
                     $endpoint = '/wp-json/wp/v2/' . $type;
-                    $fields = guide_cms_get_field_templates()[$type] ?? [];
-                    echo '<div class="wrap"><h1>' . esc_html($label) . ' REST API Docs</h1>';
+                    $category_endpoint = '/wp-json/wp/v2/' . $type . '_category';
+                    echo '<div class="wrap"><h1>' . esc_html($label) . ' REST API Documentation</h1>';
+                    
+                    echo '<div class="card" style="max-width:800px;margin-top:20px;">';
                     echo '<h2>Endpoints</h2>';
+                    
+                    echo '<h3>Pages Endpoints</h3>';
                     echo '<ul>';
-                    echo '<li><code>GET ' . esc_html($endpoint) . '</code> (list all)</li>';
-                    echo '<li><code>GET ' . esc_html($endpoint) . '/{id}</code> (get single)</li>';
-                    echo '<li><code>POST ' . esc_html($endpoint) . '</code> (create)</li>';
-                    echo '<li><code>POST ' . esc_html($endpoint) . '/{id}</code> (update)</li>';
-                    echo '<li><code>DELETE ' . esc_html($endpoint) . '/{id}</code> (delete)</li>';
+                    echo '<li><code>GET ' . esc_html($endpoint) . '</code> - List all ' . esc_html($label) . '</li>';
+                    echo '<li><code>GET ' . esc_html($endpoint) . '?slug=example</code> - Get a specific ' . esc_html($label) . ' by slug</li>';
+                    echo '<li><code>GET ' . esc_html($endpoint) . '/{id}</code> - Get a specific ' . esc_html($label) . ' by ID</li>';
                     echo '</ul>';
-                    echo '<h2>Custom Fields (meta)</h2>';
-                    if ($fields) {
-                        echo '<table class="widefat"><thead><tr><th>Key</th><th>Type</th></tr></thead><tbody>';
-                        foreach ($fields as $field) {
-                            echo '<tr><td>' . esc_html($field['key']) . '</td><td>' . esc_html($field['type']) . '</td></tr>';
-                        }
-                        echo '</tbody></table>';
-                    } else {
-                        echo '<p>No custom fields defined for this type.</p>';
-                    }
-                    echo '<h2>Example: Create</h2>';
+                    
+                    echo '<h3>Categories Endpoints</h3>';
+                    echo '<ul>';
+                    echo '<li><code>GET ' . esc_html($category_endpoint) . '</code> - List all categories</li>';
+                    echo '<li><code>GET ' . esc_html($category_endpoint) . '/{id}</code> - Get a specific category by ID</li>';
+                    echo '<li><code>GET ' . esc_html($category_endpoint) . '?slug=example</code> - Get a specific category by slug</li>';
+                    echo '<li><code>GET ' . esc_html($endpoint) . '?' . esc_html($type) . '_category={id}</code> - Get all pages in a specific category</li>';
+                    echo '</ul>';
+                    
+                    echo '<h2>Query Parameters</h2>';
+                    echo '<h3>Pages Endpoints</h3>';
+                    echo '<ul>';
+                    echo '<li><code>page</code> - Page number for pagination (default: 1)</li>';
+                    echo '<li><code>per_page</code> - Number of items per page (default: 10, max: 100)</li>';
+                    echo '<li><code>search</code> - Search query to filter results</li>';
+                    echo '<li><code>slug</code> - Filter by post slug</li>';
+                    echo '<li><code>status</code> - Filter by post status (publish, draft, etc.)</li>';
+                    echo '<li><code>' . esc_html($type) . '_category</code> - Filter by category ID</li>';
+                    echo '</ul>';
+                    
+                    echo '<h3>Categories Endpoints</h3>';
+                    echo '<ul>';
+                    echo '<li><code>page</code> - Page number for pagination (default: 1)</li>';
+                    echo '<li><code>per_page</code> - Number of items per page (default: 10, max: 100)</li>';
+                    echo '<li><code>search</code> - Search query to filter results</li>';
+                    echo '<li><code>slug</code> - Filter by category slug</li>';
+                    echo '<li><code>hide_empty</code> - Whether to hide categories with no posts (true/false)</li>';
+                    echo '</ul>';
+                    
+                    echo '<h2>Response Format</h2>';
+                    echo '<h3>Pages Response</h3>';
                     echo '<pre>{
-  "title": "Sample ' . esc_html($label) . '",
+  "id": 123,
+  "title": {
+    "rendered": "Example Title"
+  },
+  "slug": "example-title",
   "status": "publish",
-  "meta": {
-';
-                    foreach ($fields as $field) {
-                        echo '    "' . esc_html($field['key']) . '": "...",
-';
-                    }
-                    echo '  }
+  "date": "2024-01-01T00:00:00",
+  "modified": "2024-01-01T00:00:00",
+  "content": {
+    "rendered": "Post content...",
+    "protected": false
+  },
+  "excerpt": {
+    "rendered": "Post excerpt...",
+    "protected": false
+  },
+  "' . esc_html($type) . '_category": [1, 2, 3]
 }</pre>';
-                    echo '<h2>Categories</h2>';
-                    echo '<p>Taxonomy: <code>' . esc_html($type) . '_category</code></p>';
-                    echo '<p>Assign categories via the <code>' . esc_html($type) . '_category</code> field in POST/PUT.</p>';
+                    
+                    echo '<h3>Categories Response</h3>';
+                    echo '<pre>{
+  "id": 1,
+  "count": 5,
+  "description": "Category description",
+  "link": "http://example.com/category/example",
+  "name": "Example Category",
+  "slug": "example-category",
+  "taxonomy": "' . esc_html($type) . '_category",
+  "parent": 0
+}</pre>';
+                    
+                    echo '<h2>Example Usage</h2>';
+                    echo '<h3>Get All Pages</h3>';
+                    echo '<pre>curl -X GET "' . esc_html(home_url($endpoint)) . '"</pre>';
+                    
+                    echo '<h3>Get Page by Slug</h3>';
+                    echo '<pre>curl -X GET "' . esc_html(home_url($endpoint)) . '?slug=example-slug"</pre>';
+                    
+                    echo '<h3>Get All Categories</h3>';
+                    echo '<pre>curl -X GET "' . esc_html(home_url($category_endpoint)) . '"</pre>';
+                    
+                    echo '<h3>Get Pages in Category</h3>';
+                    echo '<pre>curl -X GET "' . esc_html(home_url($endpoint)) . '?' . esc_html($type) . '_category=1"</pre>';
+                    
+                    echo '<h2>Working Examples</h2>';
+                    echo '<ul>';
+                    echo '<li>List all pages: <code>' . esc_html(home_url($endpoint)) . '</code></li>';
+                    echo '<li>Get page by slug: <code>' . esc_html(home_url($endpoint)) . '?slug=example</code></li>';
+                    echo '<li>Get page by ID: <code>' . esc_html(home_url($endpoint)) . '/123</code></li>';
+                    echo '<li>List all categories: <code>' . esc_html(home_url($category_endpoint)) . '</code></li>';
+                    echo '<li>Get category by ID: <code>' . esc_html(home_url($category_endpoint)) . '/123</code></li>';
+                    echo '<li>Get category by slug: <code>' . esc_html(home_url($category_endpoint)) . '?slug=example</code></li>';
+                    echo '<li>Get pages in category: <code>' . esc_html(home_url($endpoint)) . '?' . esc_html($type) . '_category=123</code></li>';
+                    echo '</ul>';
+                    
                     echo '<h2>Reference</h2>';
                     echo '<ul>';
                     echo '<li><a href="https://developer.wordpress.org/rest-api/" target="_blank">WordPress REST API Handbook</a></li>';
-                    echo '<li><a href="https://developer.wordpress.org/rest-api/extending-the-rest-api/modifying-responses/" target="_blank">Registering Meta Fields</a></li>';
+                    echo '<li><a href="https://developer.wordpress.org/rest-api/using-the-rest-api/" target="_blank">Using the REST API</a></li>';
                     echo '</ul>';
+                    
+                    echo '</div>';
                     echo '</div>';
                 }
             );
